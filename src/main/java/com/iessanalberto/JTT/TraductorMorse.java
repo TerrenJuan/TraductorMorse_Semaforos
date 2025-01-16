@@ -16,11 +16,9 @@ package com.iessanalberto.JTT;
  *
  *      - A partir de una cadena de texto, traducirla a código morse.
  ***************************************************************************************/
-
 public class TraductorMorse {
-    public static String TEXTO_A_TRADUCIR = "En un lugar de la Mancha 1605";
 
-    // volatile Buzon a_Buzon = new Buzon();
+    public static String TEXTO_A_TRADUCIR = "En un lugar de la mancha 1605".toUpperCase();
 
     public static void main(String[] args) {
 
@@ -37,5 +35,7 @@ public class TraductorMorse {
         // Se ejecutan los hilos creados
         l_HiloProductor.start();
         l_HiloConsumidor.start();
-    }
-}
+
+    } // main()
+
+} // TraductorMorse

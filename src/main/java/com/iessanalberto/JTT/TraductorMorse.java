@@ -1,5 +1,8 @@
 package com.iessanalberto.JTT;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
 /***************************************************************************************
  *  APLICACIÓN: "Traductor Morse"
  ***************************************************************************************
@@ -8,34 +11,42 @@ package com.iessanalberto.JTT;
  *  @author  Juan Terrén
  *
  *  @version 1.0 - Versión inicial
+ *           1.1 - Versión corregida
  *
  *  @since 16/01/2025
+ *         23/01/2025
  *
  ***************************************************************************************
  *  COMENTARIOS:
  *
- *      - A partir de una cadena de texto, traducirla a código morse.
+ *      - Corrección de errores, uso de la clasea Thread en vez de lac lase ThreadPoolExecutor
+ *      - Corrección en el uso de los semáforos
+ *      - Optimización del código, añadiendo los métodos de los semáforos en el buzón, uso de
+ *        String en vez de StringBuilder
  ***************************************************************************************/
-
 public class TraductorMorse {
-    public static String TEXTO_A_TRADUCIR = "En un lugar de la Mancha 1605";
 
-    // volatile Buzon a_Buzon = new Buzon();
+    public static String TEXTO_A_TRADUCIR = "En un lugar de la mancha en 1605".toUpperCase();
+    private static volatile Buzon a_Buzon = new Buzon();
+    private static final int NUMERO_HILOS = 2;
 
     public static void main(String[] args) {
 
-        Buzon l_Buzon = new Buzon();
+        // Creamos el pool de hilos
+        ThreadPoolExecutor l_Executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUMERO_HILOS);
+
 
         // Se crean los constructores de ambos codigos
-        Productor l_Productor = new Productor(l_Buzon);
-        Consumidor l_Consumidor = new Consumidor(l_Buzon);
+        Productor l_Productor = new Productor(a_Buzon);
+        Consumidor l_Consumidor = new Consumidor(a_Buzon);
 
-        // Se crean los hilos que ejecutaran ambos codigos
-        Thread l_HiloProductor = new Thread(l_Productor);
-        Thread l_HiloConsumidor = new Thread(l_Consumidor);
+        // Lanzamos las tareas
+        l_Executor.execute(l_Productor);
+        l_Executor.execute(l_Consumidor);
 
-        // Se ejecutan los hilos creados
-        l_HiloProductor.start();
-        l_HiloConsumidor.start();
-    }
-}
+        // Apagamos el ejecutor
+        l_Executor.shutdown();
+
+    } // main()
+
+} // TraductorMorse

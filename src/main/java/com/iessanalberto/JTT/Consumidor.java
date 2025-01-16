@@ -1,93 +1,74 @@
 package com.iessanalberto.JTT;
-
-import java.util.HashMap;
-import java.util.concurrent.Semaphore;
-
+/***************************************************************************************
+ *  CLASE: "Consumidor"
+ ***************************************************************************************
+ *  @author  Juan Terrén
+ *
+ *  @version 1.0 - 1.1 - Versión corregida
+ *
+ *  @since 23/01/2025
+ *
+ ***************************************************************************************
+ *  COMENTARIOS:
+ *
+ *      - Recibe una palabra, y la traduce a código Morse letra a letra.
+ ***************************************************************************************/
 public class Consumidor implements Runnable {
 
     Buzon a_Buzon = null;
 
-    private String l_word = "";
+    private String a_Palabra = "";
 
+    private final String a_Abecedario = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789";  // Abecedario + Números
+    private final String[] a_Codigo_Morse = {
+            ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "--.--", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..", // A-Z
+            "-----", ".----", "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----." // 0-9
+    };
+
+    // Constructor de la clase Consumidor
     public Consumidor(Buzon p_Buzon) {
         a_Buzon = p_Buzon;
     }
 
-    // Mapa de caracteres del alfabeto a código Morse
-    private static final HashMap<Character, String> a_Codigo_Morse = new HashMap<>();
-
-
-
-    // Llenamos el mapa con los caracteres del alfabeto y su equivalencia en Morse
-    static {
-        a_Codigo_Morse.put('A', ".-");
-        a_Codigo_Morse.put('B', "-...");
-        a_Codigo_Morse.put('C', "-.-.");
-        a_Codigo_Morse.put('D', "-..");
-        a_Codigo_Morse.put('E', ".");
-        a_Codigo_Morse.put('F', "..-.");
-        a_Codigo_Morse.put('G', "--.");
-        a_Codigo_Morse.put('H', "....");
-        a_Codigo_Morse.put('I', "..");
-        a_Codigo_Morse.put('J', ".---");
-        a_Codigo_Morse.put('K', "-.-");
-        a_Codigo_Morse.put('L', ".-..");
-        a_Codigo_Morse.put('M', "--");
-        a_Codigo_Morse.put('N', "-.");
-        a_Codigo_Morse.put('O', "---");
-        a_Codigo_Morse.put('P', ".--.");
-        a_Codigo_Morse.put('Q', "--.-");
-        a_Codigo_Morse.put('R', ".-.");
-        a_Codigo_Morse.put('S', "...");
-        a_Codigo_Morse.put('T', "-");
-        a_Codigo_Morse.put('U', "..-");
-        a_Codigo_Morse.put('V', "...-");
-        a_Codigo_Morse.put('W', ".--");
-        a_Codigo_Morse.put('X', "-..-");
-        a_Codigo_Morse.put('Y', "-.--");
-        a_Codigo_Morse.put('Z', "--..");
-        a_Codigo_Morse.put('1', ".----");
-        a_Codigo_Morse.put('2', "..---");
-        a_Codigo_Morse.put('3', "...--");
-        a_Codigo_Morse.put('4', "....-");
-        a_Codigo_Morse.put('5', ".....");
-        a_Codigo_Morse.put('6', "-....");
-        a_Codigo_Morse.put('7', "--...");
-        a_Codigo_Morse.put('8', "---..");
-        a_Codigo_Morse.put('9', "----.");
-        a_Codigo_Morse.put('0', "-----");
-        a_Codigo_Morse.put('.', ".-.-.-");
-        a_Codigo_Morse.put(',', "--..--");
-        a_Codigo_Morse.put('?', "..--..");
-
-    }
-
+    // Sobrecarga del metodo run() por usar la interfaz Runnable, recibe una palabra que traduce letra a letra a código Morse.
     @Override
     public void run() {
 
-        try {
-            a_Buzon.a_SemaforoConsumidor.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        while (a_Buzon.get_Consumidor() < a_Buzon.a_Max_Palabras) {
+
+            // Adquirimos el token del semáforo para el consumidor
+            a_Buzon.adquirirSemaforoConsumidor();
+
+            a_Palabra = a_Buzon.get_Productor();
+
+            System.out.print(a_Palabra + ": ");
+
+            // Traducir cada caracter de la palabra a Morse
+            String l_Palabra_Morse = "";
+
+            // Bucle que obtiene la letra de la palabra, y según la posición, obtiene su traducción en Morse
+            for (Character l_Letra : a_Palabra.toCharArray()) {
+
+                // Obtenemos la letra en código morse
+                String l_Letra_Morse = a_Codigo_Morse[a_Abecedario.indexOf(l_Letra)];
+
+                // Concatenamos las "letras" que obtenemos en codigo Morse
+                l_Palabra_Morse += (l_Letra_Morse)+(" ");
+
+            }
+
+            // Mostramos por pantalla la palabra traducida
+            System.out.println(l_Palabra_Morse);
+
+            // Aumentamos el contador, para obtener la siguiente palabra
+            a_Buzon.a_Contador++;
+            a_Buzon.set_Consumidor(a_Buzon.a_Contador);
+
+            // Soltamos el token, para que lo recupere el Productor
+            a_Buzon.soltarSemaforoProductor();
+
         }
-        l_word = a_Buzon.get_Productor();
-        System.out.println(l_word);
-        System.out.print(l_word+": ");
 
-        // Traducir cada caracter de la palabra a Morse
-        StringBuilder l_palabra_morse = new StringBuilder();
-        for (char l_letra : l_word.toCharArray()) {
-            String l_letra_morse = a_Codigo_Morse.get(l_letra);
-            l_palabra_morse.append(l_letra_morse).append(" ");
-        }
+    } // run()
 
-        // Mostramos por pantalla la palabra traducida
-        System.out.println(l_palabra_morse);
-
-        a_Buzon.a_SemaforoProductor.release();
-    }
-
-
-
-
-}
+} // Consumidor
